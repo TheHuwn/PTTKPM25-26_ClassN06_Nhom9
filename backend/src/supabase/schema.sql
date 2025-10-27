@@ -23,7 +23,9 @@ create table candidates (
     skills jsonb, -- lưu danh sách kỹ năng
     cv_url text,
     portfolio text,
-    job_preferences jsonb -- mong muốn công việc
+    job_preferences jsonb, -- mong muốn công việc
+    created_at timestamp default now(),
+    updated_at timestamp default now()
 );
 
 -- Bảng employers: thông tin nhà tuyển dụng
@@ -37,7 +39,11 @@ create table employers (
     company_size text,
     industry text,
     contact_person text,
-    description text
+    description text,
+    created_at timestamp default now(),
+    updated_at timestamp default now(),
+    isVerified boolean default false,
+    status text check (status in ('pending', 'accepted', 'rejected')) default 'pending'
 );
 
 -- cv : Lưu thông tin CV
@@ -94,7 +100,7 @@ create table questions (
 );
 
 -- Bảng interviews_practices_results: lưu kết quả luyện tập phỏng vấn
-create table interviews_practices_results {
+create table interviews_practices_results (
     id uuid primary key default gen_random_uuid(),
     candidate_id uuid references candidates(user_id) on delete cascade,
     question_id uuid references questions(id) on delete cascade,
@@ -103,7 +109,7 @@ create table interviews_practices_results {
     created_at timestamp default now(),
     audio_url text,
     updated_at timestamp default now()
-}
+);
 
 -- Bảng interview_schedules: lịch phỏng vấn
 create table interview_schedules (
@@ -158,4 +164,65 @@ create table interview_emails (
     note text,
     created_at timestamp default now(),
     updated_at timestamp default now()
+);
+
+
+create table podcast(
+    id int8 primary key default gen_random_uuid(),
+    title text not null,
+    podcast_url text not null,
+    created_at timestamp default now(),
+    updated_at timestamp default now()
+)
+
+create table save_podcast(
+    id int8 primary key default gen_random_uuid(),
+    candidate_id uuid references candidates(user_id) on delete cascade,
+    podcast_id int8 references podcast(id) on delete cascade,
+    saved_at timestamp default now(),
+    unique(podcast_id) -- không lưu trùng podcast
+);
+
+-- Bảng notifications: thông báo hệ thống
+create table notifications (
+    id uuid primary key default gen_random_uuid(),
+    
+    -- Người nhận (có thể là candidate, employer hoặc admin)
+    recipient_id uuid references users(id) on delete cascade,
+    recipient_type text check (recipient_type in ('candidate', 'employer', 'admin')),
+    
+    -- Người gửi (nullable cho system notifications)
+    sender_id uuid references users(id) on delete set null,
+    sender_type text check (sender_type in ('candidate', 'employer', 'admin', 'system')),
+    
+    -- Nội dung thông báo
+    title text not null,
+    message text not null,
+    
+    -- Loại thông báo
+    type text check (type in (
+        'application_status', -- cập nhật trạng thái ứng tuyển
+        'interview_schedule', -- lịch phỏng vấn
+        'job_posted', -- công việc mới
+        'profile_update', -- cập nhật hồ sơ
+        'system_announcement', -- thông báo hệ thống
+        'email_notification', -- thông báo email
+        'account_verification', -- xác thực tài khoản
+        'other' -- khác
+    )) default 'other',
+    
+    -- Dữ liệu bổ sung (JSON)
+    data jsonb, -- chứa job_id, application_id, etc.
+    
+    -- Trạng thái
+    is_read boolean default false,
+    is_archived boolean default false,
+    
+    -- Thời gian
+    created_at timestamp default now(),
+    read_at timestamp,
+    
+    -- Index cho performance
+    index idx_notifications_recipient on notifications(recipient_id, created_at desc),
+    index idx_notifications_unread on notifications(recipient_id, is_read, created_at desc)
 );

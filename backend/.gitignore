@@ -1,3 +1,11 @@
 node_modules/
 .env
-assets
+serviceAccountKey.json
+PAYMENT_API_DOCUMENTATION.md
+PAYMENT_BACKEND_README.md
+PAYMENT_SETUP.md
+debug_company_logo.js
+rate-test.js
+test_company_logo_upload.js
+test-payment-api.js
+convert.js

@@ -1,0 +1,291 @@
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+
+// Helper function to format deadline
+const formatDeadline = (dateString) => {
+  if (!dateString) return null;
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch (error) {
+    return dateString;
+  }
+};
+
+// Shared Overview Section
+// Props: { job, views, candidatesStats, onEdit: () => void, onDelete: () => void, showActions: boolean }
+export default function JobOverviewSection({
+  job,
+  views,
+  candidatesStats,
+  onEdit,
+  onDelete,
+  showActions = true, // Default to true for backward compatibility
+}) {
+  // Debug logging
+  console.log("[JobOverviewSection] Job data:", {
+    id: job?.id,
+    title: job?.title,
+    description: job?.description ? "Has description" : "No description",
+    requirements: job?.requirements ? "Has requirements" : "No requirements",
+    benefits: job?.benefits ? "Has benefits" : "No benefits",
+    deadline: job?.deadline || job?.expired_date,
+    experience: job?.experience || job?.education,
+  });
+  return (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+      <View style={styles.statsContainer}>
+        <View style={styles.statCard}>
+          <MaterialIcons name="visibility" size={24} color="#2196F3" />
+          <Text style={styles.statNumber}>{views ?? job?.views ?? 0}</Text>
+          <Text style={styles.statLabel}>Lượt xem</Text>
+        </View>
+        <View style={styles.statCard}>
+          <MaterialIcons name="people" size={24} color="#4CAF50" />
+          <Text style={styles.statNumber}>
+            {candidatesStats?.total ?? job?.applications ?? 0}
+          </Text>
+          <Text style={styles.statLabel}>Ứng viên</Text>
+        </View>
+        <View style={styles.statCard}>
+          <MaterialIcons name="star" size={24} color="#FF9800" />
+          <Text style={styles.statNumber}>
+            {candidatesStats?.shortlisted ?? job?.shortlisted ?? 0}
+          </Text>
+          <Text style={styles.statLabel}>Được chọn</Text>
+        </View>
+      </View>
+
+      <View style={styles.infoSection}>
+        <Text style={styles.sectionTitle}>Thông tin công việc</Text>
+        <InfoRow icon="work" label="Vị trí" value={job?.title || "—"} />
+        <InfoRow
+          icon="attach-money"
+          label="Mức lương"
+          value={job?.salary || "—"}
+        />
+        <InfoRow
+          icon="location-on"
+          label="Địa điểm"
+          value={job?.location || "—"}
+        />
+        <InfoRow
+          icon="schedule"
+          label="Hạn nộp"
+          value={formatDeadline(job?.deadline || job?.expired_date) || "—"}
+        />
+        <InfoRow
+          icon="business-center"
+          label="Kinh nghiệm"
+          value={job?.experience || job?.education || "—"}
+        />
+      </View>
+
+      {job?.description ? (
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>Mô tả công việc</Text>
+          <Text style={styles.descriptionText}>{job.description}</Text>
+        </View>
+      ) : null}
+
+      <BulletedSection title="Yêu cầu công việc" data={job?.requirements} />
+      <BulletedSection title="Quyền lợi" data={job?.benefits} />
+
+      {Array.isArray(job?.skills) && job.skills.length > 0 ? (
+        <View style={styles.infoSection}>
+          <Text style={styles.sectionTitle}>Kỹ năng yêu cầu</Text>
+          <View style={styles.skillsContainer}>
+            {job.skills.map((skill, index) => (
+              <View key={index} style={styles.skillTag}>
+                <Text style={styles.skillText}>{skill}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
+      {showActions && (onEdit || onDelete) && (
+        <View style={styles.actionButtonsContainer}>
+          {onEdit && (
+            <TouchableOpacity style={styles.editJobButton} onPress={onEdit}>
+              <MaterialIcons name="edit" size={20} color="#fff" />
+              <Text style={styles.editJobButtonText}>Chỉnh sửa tin</Text>
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity style={styles.deleteJobButton} onPress={onDelete}>
+              <MaterialIcons name="delete" size={20} color="#fff" />
+              <Text style={styles.deleteJobButtonText}>Xóa tin</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+      <View style={{ height: 20 }} />
+    </ScrollView>
+  );
+}
+
+function InfoRow({ icon, label, value }) {
+  return (
+    <View style={styles.infoRow}>
+      <MaterialIcons name={icon} size={20} color="#666" />
+      <View style={styles.infoContent}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function BulletedSection({ title, data }) {
+  // Handle both string and array data
+  if (!data) return null;
+
+  let items = [];
+  if (typeof data === "string") {
+    // Split string by common delimiters and filter empty items
+    items = data.split(/[.\n\r]/).filter((item) => item.trim().length > 0);
+  } else if (Array.isArray(data)) {
+    items = data;
+  }
+
+  if (items.length === 0) return null;
+
+  return (
+    <View style={styles.infoSection}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {typeof data === "string" && items.length === 1 ? (
+        // If it's a single paragraph, display as text
+        <Text style={styles.descriptionText}>{data}</Text>
+      ) : (
+        // Display as bulleted list
+        items.map((item, index) => (
+          <View key={index} style={styles.requirementItem}>
+            <Text style={styles.requirementBullet}>•</Text>
+            <Text style={styles.requirementText}>{item.trim()}</Text>
+          </View>
+        ))
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  tabContent: { flex: 1, backgroundColor: "#f8f9fa", padding: 16 },
+  statsContainer: { flexDirection: "row", marginBottom: 20, gap: 12 },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  statNumber: { fontSize: 20, fontWeight: "bold", color: "#333", marginTop: 8 },
+  statLabel: { fontSize: 12, color: "#666", marginTop: 4 },
+  infoSection: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+  },
+  infoRow: { flexDirection: "row", alignItems: "flex-start", marginBottom: 12 },
+  infoContent: { flex: 1, marginLeft: 12 },
+  infoLabel: { fontSize: 12, color: "#666", marginBottom: 4 },
+  infoValue: { fontSize: 14, color: "#333", fontWeight: "500" },
+  descriptionText: { fontSize: 14, color: "#666", lineHeight: 22 },
+  requirementItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  requirementBullet: {
+    fontSize: 16,
+    marginRight: 8,
+    marginTop: 2,
+    color: "#4CAF50",
+  },
+  requirementText: { fontSize: 14, color: "#666", lineHeight: 20, flex: 1 },
+  skillsContainer: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  skillTag: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  skillText: { fontSize: 12, color: "#666", fontWeight: "500" },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+    marginBottom: 20,
+    gap: 12,
+  },
+  editJobButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  editJobButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  deleteJobButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F44336",
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  deleteJobButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+});

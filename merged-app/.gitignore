@@ -1,0 +1,6 @@
+.env
+app.config.js
+API_ENDPOINTS_MAPPING.md
+.vscode/
+node_modules/
+.expo/
