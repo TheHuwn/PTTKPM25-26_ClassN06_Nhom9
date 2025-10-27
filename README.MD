@@ -43,11 +43,7 @@ Dự án xây dựng một ứng dụng di động và web tương tự TopCV, h
    ```
 2. Cài đặt dependencies cho frontend và backend:
    ```bash
-   cd client
-   npm install
-   cd employer
-   npm install
-   cd admin
+   cd merge-app
    npm install
    cd ../backend
    npm install
@@ -56,7 +52,7 @@ Dự án xây dựng một ứng dụng di động và web tương tự TopCV, h
 4. Chạy ứng dụng:
    - Frontend:
      ```bash
-     npm start
+     npm start --clear
      ```
    - Backend:
      ```bash
@@ -69,10 +65,15 @@ Mọi đóng góp đều được hoan nghênh! Vui lòng tạo Pull Request ho�
 
 ## Thành viên
 
-    - Vũ Tuấn Kiên-22010373
+    - Vũ Tuấn Kiên
     - Vũ Hồng Đăng
     - Nguyễn Thế Hưng
     - Đỗ Minh Nhật
+
+## Lưu ý
+Link Github chính thức của nhóm để phục vụ cho việc quản lý code là:
+
+https://github.com/CodeGang4/React_Native_CV_Finding_App.git
 
 ## License
 
